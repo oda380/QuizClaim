@@ -15,37 +15,29 @@ export const QuizGame = ({
   refetchTotalClaims,
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [displayStatus, setDisplayStatus] = useState("idle"); // idle, error, success
+  const [displayStatus, setDisplayStatus] = useState("idle");
   const [displayErrorMessage, setDisplayErrorMessage] = useState("");
-  const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false); // New state to track wrong answer
+  const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
 
+  // CORRECTED: onSuccess callback now triggers a local state change and refetches data.
   const {
     handleClaimWrite,
-    txStatus,
-    // txErrorMessage, // No longer directly using this for display, but it's part of the error object
     isLoadingTx,
     isConfirming,
     isSuccess,
+    // Note: We are no longer using txStatus, as it seems to be the source of the issue.
   } = useQuizContractWrites(
     contractAddress,
     selectedAnswer,
     () => {
-      // onSuccess callback
-      setDisplayStatus("success");
-      refetchTotalClaims(); // Refetch total claims on successful transaction
-      setIsWrongAnswerAttempt(false); // Reset this if successful
+      // This is now just a placeholder; the main logic is moved to a useEffect hook.
     },
-    (error) => { // The 'error' object contains details about the transaction failure
-      // Extract the relevant message from the error object
+    (error) => {
       const rawErrorMessage = error?.shortMessage || error?.message || "An unknown error occurred.";
-
-      // Check if the error message indicates a wrong answer from your smart contract
-
       if (rawErrorMessage.includes("Incorrect answer")) {
         setDisplayErrorMessage("You chose poorly");
         setIsWrongAnswerAttempt(true);
       } else {
-        // Handle other types of errors (e.g., gas estimation failed, user rejected, etc.)
         setDisplayErrorMessage(rawErrorMessage);
         setIsWrongAnswerAttempt(false);
       }
@@ -53,12 +45,23 @@ export const QuizGame = ({
     }
   );
 
+  // New useEffect hook to handle a successful transaction.
+  // This is a more reliable way to react to the `isSuccess` state.
+  useEffect(() => {
+    if (isSuccess) {
+      setDisplayStatus("success");
+      refetchTotalClaims();
+      setIsWrongAnswerAttempt(false);
+    }
+  }, [isSuccess, refetchTotalClaims]);
+
+
   useEffect(() => {
     if (isErrorAssignedQuestion) {
       const reason = assignedQuestionError?.shortMessage || assignedQuestionError?.message || "The ancient scrolls are unreadable.";
       setDisplayErrorMessage(reason);
       setDisplayStatus("error");
-      setIsWrongAnswerAttempt(false); // Not a wrong answer attempt, but an initial error
+      setIsWrongAnswerAttempt(false);
     } else if (!isLoadingAssignedQuestion && !question && !hasUserClaimed) {
       setDisplayErrorMessage("No quest assigned to your address.");
       setDisplayStatus("error");
@@ -67,13 +70,15 @@ export const QuizGame = ({
   }, [isErrorAssignedQuestion, assignedQuestionError, isLoadingAssignedQuestion, question, hasUserClaimed]);
 
 
+  // CORRECTED: Simplified button text logic
   const btnText = isLoadingTx
     ? "Confirm…"
     : isConfirming
     ? "Minting…"
-    : txStatus === "submitting"
-    ? "Sending…"
+    : isSuccess
+    ? "Minted!"
     : "Claim NFT";
+
 
   if (isLoadingHasClaimed) {
     return (
@@ -95,11 +100,9 @@ export const QuizGame = ({
     );
   }
 
-  // Display the specific error message based on `isWrongAnswerAttempt`
   if (displayStatus === "error") {
     return (
       <div className="p-5 bg-blossom text-slate rounded-lg text-center font-medium">
-        {/* You can use a different emoji for a wrong answer if you like! */}
         <span className="text-2xl mr-2">
           {isWrongAnswerAttempt ? "❌" : "🚫"}
         </span>
@@ -116,8 +119,8 @@ export const QuizGame = ({
     );
   }
 
-  // If a transaction was successful but the user hasn't claimed yet (e.g. initial claim)
-  if (isSuccess && displayStatus === "success") {
+  // CORRECTED: The `ClaimSuccessDisplay` is now returned when `isSuccess` is true
+  if (isSuccess) {
     return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
   }
 
@@ -141,14 +144,15 @@ export const QuizGame = ({
       </div>
       <button
         onClick={handleClaimWrite}
-        disabled={!selectedAnswer || isLoadingTx || isConfirming || txStatus === "submitting"}
+        // CORRECTED: Simplified the disabled logic
+        disabled={!selectedAnswer || isLoadingTx || isConfirming || isSuccess}
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
-          ${!selectedAnswer || isLoadingTx || isConfirming || txStatus === "submitting"
+          ${!selectedAnswer || isLoadingTx || isConfirming || isSuccess
             ? 'bg-slate/40 text-slate/60 cursor-not-allowed'
             : 'bg-canopy text-slate hover:bg-moss'}`}
       >
         {btnText}
-        {(isLoadingTx || isConfirming || txStatus === "submitting") && (
+        {(isLoadingTx || isConfirming) && (
           <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full" />
         )}
       </button>
