@@ -1,0 +1,502 @@
+[
+  {
+    "index": 0,
+    "question": "What exact term describes the 12- or 24-word recovery phrase used to regenerate a crypto wallet across devices?",
+    "options": [
+      "Receive",
+      "Seed phrase",
+      "Front-running",
+      "EOA"
+    ]
+  },
+  {
+    "index": 1,
+    "question": "What term refers to a crypto wallet stored offline and not connected to the internet, providing maximum security against hacks?",
+    "options": [
+      "Cold wallet",
+      "DAO hack",
+      "ERC-20",
+      "SELFDESTRUCT"
+    ]
+  },
+  {
+    "index": 2,
+    "question": "What is the name for Ethereum accounts that are controlled by private keys and not deployed contracts?",
+    "options": [
+      "EOA",
+      "Solidity",
+      "Ownership",
+      "Cold wallet"
+    ]
+  },
+  {
+    "index": 3,
+    "question": "What is the term for the process of signing a message with your wallet to prove control of the private key, without sending a transaction?",
+    "options": [
+      "The Merge",
+      "Gwei",
+      "ENS",
+      "Ownership"
+    ]
+  },
+  {
+    "index": 4,
+    "question": "What Ethereum standard introduced account abstraction by enabling smart contract wallets with programmable logic?",
+    "options": [
+      "Infura",
+      "ERC-4337",
+      "Seed phrase",
+      "x*y=k"
+    ]
+  },
+  {
+    "index": 5,
+    "question": "What is the name of the runtime environment that processes Ethereum smart contracts and maintains blockchain state?",
+    "options": [
+      "Proof-of-stake",
+      "IPFS",
+      "EVM",
+      "x*y=k"
+    ]
+  },
+  {
+    "index": 6,
+    "question": "What programming language is most commonly used to write smart contracts deployed on the Ethereum network?",
+    "options": [
+      "EVM",
+      "Solidity",
+      "Rollup",
+      "ERC-20"
+    ]
+  },
+  {
+    "index": 7,
+    "question": "What is the Ethereum token standard used for fungible tokens, such as DAI or USDC?",
+    "options": [
+      "DAO",
+      "ERC-20",
+      "HODL",
+      "EOA"
+    ]
+  },
+  {
+    "index": 8,
+    "question": "What Solidity function is called automatically when a contract receives ETH with empty calldata and has no fallback function defined?",
+    "options": [
+      "Impermanent loss",
+      "ENS",
+      "Receive",
+      "Front-running"
+    ]
+  },
+  {
+    "index": 9,
+    "question": "What EVM opcode permanently deletes a contract and optionally sends its remaining ETH balance to an address?",
+    "options": [
+      "EOA",
+      "The Merge",
+      "SELFDESTRUCT",
+      "ERC-4337"
+    ]
+  },
+  {
+    "index": 10,
+    "question": "What consensus mechanism, currently used by Ethereum, randomly selects validators based on staked ETH to produce blocks?",
+    "options": [
+      "TVL",
+      "Proof-of-stake",
+      "Solidity",
+      "Rollup"
+    ]
+  },
+  {
+    "index": 11,
+    "question": "What is the unique cryptographic identifier assigned to each block on Ethereum?",
+    "options": [
+      "Proof-of-stake",
+      "Block hash",
+      "Minting",
+      "Metadata reveal"
+    ]
+  },
+  {
+    "index": 12,
+    "question": "What is the current average time it takes to produce a new block on Ethereum mainnet?",
+    "options": [
+      "MEV",
+      "12 seconds",
+      "Slippage",
+      "Vitalik"
+    ]
+  },
+  {
+    "index": 13,
+    "question": "What unit of measure is commonly used to express Ethereum gas prices, equal to one-billionth of 1 ETH?",
+    "options": [
+      "RPC endpoint",
+      "Compound",
+      "Gwei",
+      "HODL"
+    ]
+  },
+  {
+    "index": 14,
+    "question": "What is the name for the temporary storage pool of unconfirmed transactions waiting to be included in a block?",
+    "options": [
+      "x*y=k",
+      "Mempool",
+      "Vitalik",
+      "Front-running"
+    ]
+  },
+  {
+    "index": 15,
+    "question": "In DeFi, what metric represents the total USD value of assets locked across all liquidity pools or lending protocols?",
+    "options": [
+      "Ownership",
+      "TVL",
+      "Mempool",
+      "EOA"
+    ]
+  },
+  {
+    "index": 16,
+    "question": "What DeFi protocol was the first to introduce decentralized, algorithmic interest rate markets for lending and borrowing?",
+    "options": [
+      "Compound",
+      "Gwei",
+      "ERC-4337",
+      "IPFS"
+    ]
+  },
+  {
+    "index": 17,
+    "question": "What is the name of the pricing model used by DEXs like Uniswap that replaces traditional order books with liquidity pools?",
+    "options": [
+      "DAO",
+      "Optimism",
+      "AMM",
+      "Slippage"
+    ]
+  },
+  {
+    "index": 18,
+    "question": "What is the formula used by Uniswap V2\u2019s constant product market maker to maintain balance in a trading pair?",
+    "options": [
+      "TVL",
+      "DAO hack",
+      "x*y=k",
+      "ENS"
+    ]
+  },
+  {
+    "index": 19,
+    "question": "What is the term for the temporary loss experienced by liquidity providers when the price ratio of deposited tokens changes?",
+    "options": [
+      "Metadata reveal",
+      "Impermanent loss",
+      "Infura",
+      "Optimism"
+    ]
+  },
+  {
+    "index": 20,
+    "question": "What Ethereum token standard defines non-fungible tokens (NFTs), each with a unique ID and metadata?",
+    "options": [
+      "CryptoPunks",
+      "Ownership",
+      "ERC-721",
+      "EVM"
+    ]
+  },
+  {
+    "index": 21,
+    "question": "What part of an NFT, including image and traits, is usually stored off-chain and retrieved via URI?",
+    "options": [
+      "Metadata",
+      "Hardhat",
+      "Scalability",
+      "MEV"
+    ]
+  },
+  {
+    "index": 22,
+    "question": "What decentralized file storage system is most commonly used to host NFT images and metadata URIs?",
+    "options": [
+      "DAO",
+      "Chainlink",
+      "IPFS",
+      "ERC-20Votes"
+    ]
+  },
+  {
+    "index": 23,
+    "question": "What is the term for the process of generating and assigning a new NFT to a specific wallet address?",
+    "options": [
+      "MEV",
+      "HODL",
+      "Minting",
+      "ERC-20"
+    ]
+  },
+  {
+    "index": 24,
+    "question": "What is the event called when previously hidden NFT metadata is revealed to the public after minting is complete?",
+    "options": [
+      "Scalability",
+      "ERC-20",
+      "Metadata reveal",
+      "x*y=k"
+    ]
+  },
+  {
+    "index": 25,
+    "question": "What type of Ethereum scaling solution bundles multiple transactions off-chain and submits them to L1 for finalization?",
+    "options": [
+      "Rollup",
+      "HODL",
+      "Quadratic voting",
+      "Compound"
+    ]
+  },
+  {
+    "index": 26,
+    "question": "What is the name of the optimistic rollup developed by a team originally funded by the Ethereum Foundation?",
+    "options": [
+      "Quadratic voting",
+      "Optimism",
+      "Front-running",
+      "Impermanent loss"
+    ]
+  },
+  {
+    "index": 27,
+    "question": "What is the name of the ZK-rollup that uses zero-knowledge proofs to compress and validate Ethereum transactions?",
+    "options": [
+      "zkSync",
+      "Proof-of-stake",
+      "RPC endpoint",
+      "CryptoPunks"
+    ]
+  },
+  {
+    "index": 28,
+    "question": "What is the primary technical advantage of using Layer 2 networks instead of the Ethereum base layer?",
+    "options": [
+      "Scalability",
+      "Snapshot",
+      "Cold wallet",
+      "ERC-20"
+    ]
+  },
+  {
+    "index": 29,
+    "question": "What is the general name for protocols that move assets across different chains or between Layer 1 and Layer 2?",
+    "options": [
+      "IPFS",
+      "TVL",
+      "Bridge",
+      "Ownership"
+    ]
+  },
+  {
+    "index": 30,
+    "question": "What acronym refers to a collectively governed organization that operates transparently via smart contracts on-chain?",
+    "options": [
+      "RPC endpoint",
+      "DAO",
+      "ERC-4337",
+      "CryptoPunks"
+    ]
+  },
+  {
+    "index": 31,
+    "question": "What type of token is typically used by DAOs to grant holders the ability to vote on governance proposals?",
+    "options": [
+      "Proof-of-stake",
+      "Compound",
+      "ENS",
+      "Governance token"
+    ]
+  },
+  {
+    "index": 32,
+    "question": "What off-chain voting system is commonly used by DAOs to coordinate and record community governance decisions?",
+    "options": [
+      "The Merge",
+      "Snapshot",
+      "Impermanent loss",
+      "Rollup"
+    ]
+  },
+  {
+    "index": 33,
+    "question": "What voting mechanism is designed to prevent whales from dominating governance by increasing the cost of each additional vote?",
+    "options": [
+      "Mempool",
+      "Quadratic voting",
+      "TVL",
+      "ERC-20"
+    ]
+  },
+  {
+    "index": 34,
+    "question": "What ERC extension standard adds vote delegation and checkpoint-based voting to ERC-20 tokens?",
+    "options": [
+      "ERC-20Votes",
+      "Mempool",
+      "Infura",
+      "ENS"
+    ]
+  },
+  {
+    "index": 35,
+    "question": "What term describes the URL or Web3 interface used to communicate with a blockchain node using JSON-RPC?",
+    "options": [
+      "RPC endpoint",
+      "Ownership",
+      "The Merge",
+      "Front-running"
+    ]
+  },
+  {
+    "index": 36,
+    "question": "What is the name of the decentralized domain system that replaces Ethereum wallet addresses with human-readable names?",
+    "options": [
+      "Metadata",
+      "Snapshot",
+      "ENS",
+      "ERC-4337"
+    ]
+  },
+  {
+    "index": 37,
+    "question": "What peer-to-peer file storage system allows for permanent, content-addressed storage of NFT assets?",
+    "options": [
+      "Receive",
+      "RPC endpoint",
+      "Gwei",
+      "IPFS"
+    ]
+  },
+  {
+    "index": 38,
+    "question": "What infrastructure platform offers Web3 APIs and Ethereum node access to developers and dApps?",
+    "options": [
+      "Infura",
+      "12 seconds",
+      "Solidity",
+      "Optimism"
+    ]
+  },
+  {
+    "index": 39,
+    "question": "What local Ethereum development tool is used to write, compile, deploy, and test Solidity smart contracts?",
+    "options": [
+      "zkSync",
+      "IPFS",
+      "Optimism",
+      "Hardhat"
+    ]
+  },
+  {
+    "index": 40,
+    "question": "What decentralized oracle network delivers off-chain data such as asset prices and weather to smart contracts?",
+    "options": [
+      "Chainlink",
+      "Solidity",
+      "Slippage",
+      "MEV"
+    ]
+  },
+  {
+    "index": 41,
+    "question": "What term describes inserting a transaction ahead of another in the mempool to gain a trading advantage?",
+    "options": [
+      "Solidity",
+      "Front-running",
+      "12 seconds",
+      "TVL"
+    ]
+  },
+  {
+    "index": 42,
+    "question": "What is the difference between a quoted and actual execution price, typically expressed as a percentage?",
+    "options": [
+      "Slippage",
+      "Receive",
+      "zkSync",
+      "Block hash"
+    ]
+  },
+  {
+    "index": 43,
+    "question": "What is the name for a loan that requires no collateral and must be returned within the same blockchain transaction?",
+    "options": [
+      "Scalability",
+      "RPC endpoint",
+      "Flash loan",
+      "ERC-4337"
+    ]
+  },
+  {
+    "index": 44,
+    "question": "What term describes the value extractable by block proposers or searchers through transaction reordering and insertion?",
+    "options": [
+      "EVM",
+      "TVL",
+      "MEV",
+      "CryptoPunks"
+    ]
+  },
+  {
+    "index": 45,
+    "question": "What is the first name of Ethereum\u2019s co-founder and whitepaper author?",
+    "options": [
+      "Rollup",
+      "Gwei",
+      "Vitalik",
+      "DAO"
+    ]
+  },
+  {
+    "index": 46,
+    "question": "What was the name of the 2022 Ethereum upgrade that transitioned the network from PoW to PoS?",
+    "options": [
+      "Seed phrase",
+      "Compound",
+      "Metadata reveal",
+      "The Merge"
+    ]
+  },
+  {
+    "index": 47,
+    "question": "What popular misspelled term in crypto culture refers to holding a coin long-term during volatility?",
+    "options": [
+      "The Merge",
+      "RPC endpoint",
+      "MEV",
+      "HODL"
+    ]
+  },
+  {
+    "index": 48,
+    "question": "What 2016 smart contract exploit led to Ethereum splitting into Ethereum and Ethereum Classic?",
+    "options": [
+      "DAO hack",
+      "Gwei",
+      "Ownership",
+      "x*y=k"
+    ]
+  },
+  {
+    "index": 49,
+    "question": "What early Ethereum NFT collection, launched by Larva Labs in 2017, is often cited as the first major NFT project?",
+    "options": [
+      "CryptoPunks",
+      "DAO",
+      "Ownership",
+      "IPFS"
+    ]
+  }
+]

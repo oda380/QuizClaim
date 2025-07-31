@@ -1,0 +1,26 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Montserrat:wght@600;700&display=swap');
+@import "@rainbow-me/rainbowkit/styles.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button[data-testid="rk-connect-button"] {
+  border: 1px solid #787878 !important; 
+  box-shadow: none !important; 
+}
+
+button[data-testid="rk-connect-button"]:hover {
+  border-color: #A0A0A0 !important; 
+  
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) 
+}
+
+body {
+  @apply bg-gradient-to-br from-canopy to-moss font-body text-slate;
+}
+
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+.animate-bounce { animation: bounce 1.2s infinite; }
+
