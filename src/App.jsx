@@ -11,7 +11,8 @@ const LazyQuizGame            = lazy(() => import("./components/QuizGame"));
 const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
 
 export default function App({ contractAddress }) {
-  const { isConnected } = useAccount();
+  // Add isConnecting to the destructuring from useAccount
+  const { isConnected, isConnecting } = useAccount();
 
   const {
     hasUserClaimed,
@@ -24,17 +25,31 @@ export default function App({ contractAddress }) {
     refetchTotalClaims,
   } = useQuizContractReads(contractAddress);
 
+  // Combine all initial loading states into one variable
+  const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
+
+  // Conditional render for the initial loading screen
+  // This prevents the main UI from flashing until the data is ready
+  if (isInitialLoading) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.png')" }}>
+        <div className="text-white text-xl font-display animate-pulse">Loading adventure...</div>
+      </main>
+    );
+  }
+
+  // Once the app is not in its initial loading state, render the full UI
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
       {/* Banner */}
-      <div className="w-full max-w-screen-xl mx-auto mb-8"> {/* Added max-w-screen-xl and mx-auto back to the container */}
+      <div className="w-full max-w-screen-xl mx-auto mb-8">
         <img
           src="/images/quest-banner.png"
           alt="Quest Banner"
-          className="w-full h-auto object-cover object-center" // Keep w-full h-auto object-cover on the image
+          className="w-full h-auto object-cover object-center"
         />
       </div>
 
