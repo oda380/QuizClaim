@@ -12,6 +12,7 @@ const LazyQuizGame            = lazy(() => import("./components/QuizGame"));
 const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
 
 export default function App({ contractAddress }) {
+  // CORRECTED: Add isConnecting to the destructuring from useAccount
   const { isConnected, isConnecting } = useAccount();
 
   const {
@@ -25,7 +26,8 @@ export default function App({ contractAddress }) {
     refetchTotalClaims,
   } = useQuizContractReads(contractAddress);
 
-
+  // CORRECTED: isInitialLoading now correctly references all necessary variables
+  const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
 
   if (isInitialLoading) {
     return (
@@ -40,9 +42,7 @@ export default function App({ contractAddress }) {
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
-
       {/* Banner */}
-
       <div className="w-full max-w-screen-xl mx-auto mb-8">
         <img
           src="/images/quest-banner.png"
@@ -51,9 +51,7 @@ export default function App({ contractAddress }) {
         />
       </div>
 
-
       {/* Quiz Card */}
-
       <div className="relative w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-sandstone/90 backdrop-blur-sm rounded-xl shadow-soft p-8">
         <div className="bg-yellow-900 rounded-t-lg -mx-8 -mt-8 px-8 pt-6 pb-4 shadow-inner">
           <header className="flex justify-between items-center">
@@ -63,7 +61,6 @@ export default function App({ contractAddress }) {
         </div>
 
         <div className="mt-8">
-          {/* Use the specific placeholder as the Suspense fallback */}
           <Suspense fallback={<ConnectWalletSectionPlaceholder />}>
             {!isConnected ? (
               <LazyConnectWalletSection />
