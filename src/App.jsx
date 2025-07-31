@@ -11,7 +11,6 @@ const LazyQuizGame            = lazy(() => import("./components/QuizGame"));
 const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
 
 export default function App({ contractAddress }) {
-  // Add isConnecting to the destructuring from useAccount
   const { isConnected, isConnecting } = useAccount();
 
   const {
@@ -29,7 +28,6 @@ export default function App({ contractAddress }) {
   const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
 
   // Conditional render for the initial loading screen
-  // This prevents the main UI from flashing until the data is ready
   if (isInitialLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.png')" }}>
@@ -38,13 +36,12 @@ export default function App({ contractAddress }) {
     );
   }
 
-  // Once the app is not in its initial loading state, render the full UI
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
-      {/* Banner */}
+      {/* Banner - Now responsive */}
       <div className="w-full max-w-screen-xl mx-auto mb-8">
         <img
           src="/images/quest-banner.png"
@@ -53,8 +50,8 @@ export default function App({ contractAddress }) {
         />
       </div>
 
-      {/* Quiz Card */}
-      <div className="relative w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-sandstone/90 backdrop-blur-sm rounded-xl shadow-soft p-8 animate-fade-in-up">
+      {/* Quiz Card - Animation removed to prevent perceived loading delay */}
+      <div className="relative w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-sandstone/90 backdrop-blur-sm rounded-xl shadow-soft p-8">
         <div className="bg-yellow-900 rounded-t-lg -mx-8 -mt-8 px-8 pt-6 pb-4 shadow-inner">
           <header className="flex justify-between items-center">
             <h1 className="text-3xl font-display text-white">Test of Knowledge</h1>
