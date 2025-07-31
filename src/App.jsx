@@ -30,12 +30,11 @@ export default function App({ contractAddress }) {
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
       {/* Banner */}
-      {/* Banner */}
-      <div className="w-full mb-8"> {/* Removed max-w-screen-xl and fixed height for better responsiveness */}
+      <div className="w-full max-w-screen-xl mx-auto mb-8"> {/* Added max-w-screen-xl and mx-auto back to the container */}
         <img
           src="/images/quest-banner.png"
           alt="Quest Banner"
-          className="w-full h-auto object-cover object-center" // Use h-auto to maintain aspect ratio
+          className="w-full h-auto object-cover object-center" // Keep w-full h-auto object-cover on the image
         />
       </div>
 
