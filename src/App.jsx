@@ -30,11 +30,12 @@ export default function App({ contractAddress }) {
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
       {/* Banner */}
-      <div className="w-full max-w-screen-xl mx-auto mb-8 overflow-hidden" style={{ height: '660px' }}>
+      {/* Banner */}
+      <div className="w-full mb-8"> {/* Removed max-w-screen-xl and fixed height for better responsiveness */}
         <img
           src="/images/quest-banner.png"
           alt="Quest Banner"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-auto object-cover object-center" // Use h-auto to maintain aspect ratio
         />
       </div>
 
