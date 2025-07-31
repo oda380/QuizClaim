@@ -1,18 +1,18 @@
-// src/App.jsx
 import React, { Suspense, lazy } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuizContractReads } from "./hooks/useQuizContractReads";
 import { Footer } from "./components/Footer";
 import ConnectWalletSectionPlaceholder from "./components/ConnectWalletSectionPlaceholder";
+import QuizGamePlaceholder from "./components/QuizGamePlaceholder";
+import ClaimSuccessDisplayPlaceholder from "./components/ClaimSuccessDisplayPlaceholder";
 
-// Lazily load components (they now each have a default export)
+// Lazily load components
 const LazyConnectWalletSection = lazy(() => import("./components/ConnectWalletSection"));
 const LazyQuizGame            = lazy(() => import("./components/QuizGame"));
 const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
 
 export default function App({ contractAddress }) {
-  // CORRECTED: Add isConnecting to the destructuring from useAccount
   const { isConnected, isConnecting } = useAccount();
 
   const {
@@ -26,7 +26,6 @@ export default function App({ contractAddress }) {
     refetchTotalClaims,
   } = useQuizContractReads(contractAddress);
 
-  // CORRECTED: isInitialLoading now correctly references all necessary variables
   const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
 
   if (isInitialLoading) {
@@ -61,25 +60,32 @@ export default function App({ contractAddress }) {
         </div>
 
         <div className="mt-8">
-          <Suspense fallback={<ConnectWalletSectionPlaceholder />}>
-            {!isConnected ? (
+          {!isConnected ? (
+            // Granular Suspense for the ConnectWalletSection
+            <Suspense fallback={<ConnectWalletSectionPlaceholder />}>
               <LazyConnectWalletSection />
-            ) : (
-              <section className="space-y-6">
-                {hasUserClaimed ? (
+            </Suspense>
+          ) : (
+            <section className="space-y-6">
+              {hasUserClaimed ? (
+                // Granular Suspense for the ClaimSuccessDisplay
+                <Suspense fallback={<ClaimSuccessDisplayPlaceholder />}>
                   <LazyClaimSuccessDisplay
                     totalClaims={totalClaims}
                     showImage={true}
                   />
-                ) : (
-                  <>
-                    <div className="mb-6">
-                      <img
-                        src="/images/placeholder.png"
-                        alt="Placeholder image for NFT"
-                        className="w-full h-auto rounded-lg shadow-md object-cover"
-                      />
-                    </div>
+                </Suspense>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <img
+                      src="/images/placeholder.png"
+                      alt="Placeholder image for NFT"
+                      className="w-full h-auto rounded-lg shadow-md object-cover"
+                    />
+                  </div>
+                  {/* Granular Suspense for the QuizGame */}
+                  <Suspense fallback={<QuizGamePlaceholder />}>
                     <LazyQuizGame
                       contractAddress={contractAddress}
                       question={question}
@@ -91,11 +97,11 @@ export default function App({ contractAddress }) {
                       totalClaims={totalClaims}
                       refetchTotalClaims={refetchTotalClaims}
                     />
-                  </>
-                )}
-              </section>
-            )}
-          </Suspense>
+                  </Suspense>
+                </>
+              )}
+            </section>
+          )}
         </div>
       </div>
 
