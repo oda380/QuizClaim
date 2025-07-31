@@ -53,10 +53,10 @@ export default function App({ contractAddress }) {
       {/* Quiz Card */}
       <div className="relative w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-sandstone/90 backdrop-blur-sm rounded-xl shadow-soft p-8">
         <div className="bg-yellow-900 rounded-t-lg -mx-8 -mt-8 px-8 pt-6 pb-4 shadow-inner">
-          <header className="flex justify-between items-center">
-            <h1 className="text-3xl font-display text-white">Test of Knowledge</h1>
-            <ConnectButton />
-          </header>
+        <header className="flex flex-col sm:flex-row justify-between items-center">
+          <h1 className="text-3xl font-display text-white">Test of Knowledge</h1>
+          <ConnectButton />
+        </header>
         </div>
 
         <div className="mt-8">
