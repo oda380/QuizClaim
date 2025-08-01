@@ -30,7 +30,7 @@ export default function App({ contractAddress }) {
 
   if (isInitialLoading) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.webp')" }}>
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.png')" }}>
         <div className="text-white text-xl font-display animate-pulse">Loading adventure...</div>
       </main>
     );
@@ -39,7 +39,7 @@ export default function App({ contractAddress }) {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
-      style={{ backgroundImage: "url('/images/jungle-temple.webp')" }}
+      style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
       {/* Banner */}
       <div className="w-full max-w-screen-xl mx-auto mb-8">
