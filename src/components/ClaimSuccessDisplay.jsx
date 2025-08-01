@@ -19,7 +19,7 @@ export const ClaimSuccessDisplay = ({ totalClaims, showImage = true }) => {
       .catch(err => console.error("Failed to load NFT metadata", err));
   }, []);
 
-  const finalImageUrl = ipfsImageCid ? getGatewayUrl(ipfsImageCid) : "/images/placeholder.png";
+  const finalImageUrl = ipfsImageCid ? getGatewayUrl(ipfsImageCid) : "/images/placeholder.webp";
 
   return (
     // ... rest of your component remains the same

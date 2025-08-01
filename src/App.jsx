@@ -30,7 +30,7 @@ export default function App({ contractAddress }) {
 
   if (isInitialLoading) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.png')" }}>
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: "url('/images/jungle-temple.webp')" }}>
         <div className="text-white text-xl font-display animate-pulse">Loading adventure...</div>
       </main>
     );
@@ -39,12 +39,12 @@ export default function App({ contractAddress }) {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
-      style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
+      style={{ backgroundImage: "url('/images/jungle-temple.webp')" }}
     >
       {/* Banner */}
       <div className="w-full max-w-screen-xl mx-auto mb-8">
         <img
-          src="/images/quest-banner.png"
+          src="/images/quest-banner.webp"
           alt="Quest Banner"
           className="w-full h-auto object-cover object-center"
         />
@@ -79,7 +79,7 @@ export default function App({ contractAddress }) {
                 <>
                   <div className="mb-6">
                     <img
-                      src="/images/placeholder.png"
+                      src="/images/placeholder.webp"
                       alt="Placeholder image for NFT"
                       className="w-full h-auto rounded-lg shadow-md object-cover"
                     />

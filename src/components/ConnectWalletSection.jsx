@@ -11,7 +11,7 @@ export const ConnectWalletSection = () => (
     {/* The preconnect.png image */}
     <div className="mb-6">
       <img
-        src="/images/preconnect.png"
+        src="/images/preconnect.webp"
         alt="Pre-connect image"
         className="w-full h-auto rounded-lg shadow-md object-cover"
       />
