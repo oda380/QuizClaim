@@ -1,8 +1,8 @@
-// QuizGame.jsx
 import React, { useState, useEffect } from "react";
 import { useQuizContractWrites } from "../hooks/useQuizContractWrites";
 import { ProgressBar } from "./ProgressBar";
 import { ClaimSuccessDisplay } from "./ClaimSuccessDisplay";
+import { useIpfsGatewayContext } from '../context/IpfsGatewayContext';
 
 export const QuizGame = ({
   contractAddress,
@@ -15,8 +15,9 @@ export const QuizGame = ({
   totalClaims,
   refetchTotalClaims,
   refetchHasClaimed,
-  nftMetadata, // New prop for pre-fetched metadata
+  nftMetadata,
 }) => {
+  const { getGatewayUrl } = useIpfsGatewayContext();
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [displayStatus, setDisplayStatus] = useState("idle");
   const [displayErrorMessage, setDisplayErrorMessage] = useState("");
@@ -70,7 +71,6 @@ export const QuizGame = ({
 
   // --- Render logic ---
   if (showOptimisticSuccess) {
-    // Pass the pre-fetched metadata directly
     return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
   }
   
@@ -82,7 +82,6 @@ export const QuizGame = ({
     );
   }
 
-  // NOTE: This check is now here to ensure ClaimSuccessDisplay is a single unit
   if (hasUserClaimed) {
     return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
   }
@@ -122,12 +121,18 @@ export const QuizGame = ({
 
   const isDisabled = !selectedAnswer || isWritePending || isConfirming;
 
+  // --- UPDATED LOGIC FOR THE IMAGE URL ---
+  const placeholderImageUrl = "/images/placeholder.webp";
+  const rewardImageUrl = nftMetadata ? getGatewayUrl(nftMetadata.image) : placeholderImageUrl;
+  
+  const imageUrl = showOptimisticSuccess ? rewardImageUrl : placeholderImageUrl;
+  // ----------------------------------------
+
   return (
     <>
-      {/* The image is now part of the QuizGame component's render */}
       <div className="mb-6">
         <img
-          src={nftMetadata ? nftMetadata.image : "/images/placeholder.webp"}
+          src={imageUrl}
           alt={nftMetadata ? nftMetadata.name : "Placeholder image for NFT"}
           className="w-full h-auto rounded-lg shadow-md object-cover"
         />
