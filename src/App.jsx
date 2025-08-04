@@ -5,13 +5,14 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuizContractReads } from "./hooks/useQuizContractReads";
 import { Footer } from "./components/Footer";
 import ConnectWalletSectionPlaceholder from "./components/ConnectWalletSectionPlaceholder";
-import QuizGamePlaceholder from "./components/QuizGamePlaceholder";
 import ClaimSuccessDisplayPlaceholder from "./components/ClaimSuccessDisplayPlaceholder";
 
-// Lazily load components
+// Import components directly instead of lazy-loading them
+import QuizGame from "./components/QuizGame";
+// Keep LazyConnectWalletSection if you still want to lazy-load the wallet section
 const LazyConnectWalletSection = lazy(() => import("./components/ConnectWalletSection"));
-const LazyQuizGame            = lazy(() => import("./components/QuizGame"));
 const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
+
 
 export default function App({ contractAddress }) {
   const { isConnected, isConnecting } = useAccount();
@@ -25,7 +26,7 @@ export default function App({ contractAddress }) {
     assignedQuestionError,
     totalClaims,
     refetchTotalClaims,
-    refetchHasClaimed, // New function from the hook
+    refetchHasClaimed,
   } = useQuizContractReads(contractAddress);
 
   const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
@@ -84,20 +85,19 @@ export default function App({ contractAddress }) {
                       className="w-full h-auto rounded-lg shadow-md object-cover"
                     />
                   </div>
-                  <Suspense fallback={<QuizGamePlaceholder />}>
-                    <LazyQuizGame
-                      contractAddress={contractAddress}
-                      question={question}
-                      isLoadingAssignedQuestion={isLoadingAssignedQuestion}
-                      isErrorAssignedQuestion={isErrorAssignedQuestion}
-                      assignedQuestionError={assignedQuestionError}
-                      hasUserClaimed={hasUserClaimed}
-                      isLoadingHasClaimed={isLoadingHasClaimed}
-                      totalClaims={totalClaims}
-                      refetchTotalClaims={refetchTotalClaims}
-                      refetchHasClaimed={refetchHasClaimed} // Pass the new refetch function
-                    />
-                  </Suspense>
+                  {/* Now QuizGame is rendered directly, no Suspense needed */}
+                  <QuizGame
+                    contractAddress={contractAddress}
+                    question={question}
+                    isLoadingAssignedQuestion={isLoadingAssignedQuestion}
+                    isErrorAssignedQuestion={isErrorAssignedQuestion}
+                    assignedQuestionError={assignedQuestionError}
+                    hasUserClaimed={hasUserClaimed}
+                    isLoadingHasClaimed={isLoadingHasClaimed}
+                    totalClaims={totalClaims}
+                    refetchTotalClaims={refetchTotalClaims}
+                    refetchHasClaimed={refetchHasClaimed}
+                  />
                 </>
               )}
             </section>
