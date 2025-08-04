@@ -1,21 +1,38 @@
-// App.jsx
-import React, { Suspense, lazy } from "react";
+// src/App.jsx
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuizContractReads } from "./hooks/useQuizContractReads";
 import { Footer } from "./components/Footer";
 import ConnectWalletSectionPlaceholder from "./components/ConnectWalletSectionPlaceholder";
-import ClaimSuccessDisplayPlaceholder from "./components/ClaimSuccessDisplayPlaceholder";
+import { REWARD_NFT_METADATA_URI } from "./constants";
 
-// Import components directly instead of lazy-loading them
+// Import components directly
 import QuizGame from "./components/QuizGame";
-// Keep LazyConnectWalletSection if you still want to lazy-load the wallet section
+import ClaimSuccessDisplay from "./components/ClaimSuccessDisplay";
+
+// Keep lazy loading for the ConnectWalletSection if desired to minimize initial bundle size
 const LazyConnectWalletSection = lazy(() => import("./components/ConnectWalletSection"));
-const LazyClaimSuccessDisplay = lazy(() => import("./components/ClaimSuccessDisplay"));
 
 
 export default function App({ contractAddress }) {
   const { isConnected, isConnecting } = useAccount();
+
+  const [nftMetadata, setNftMetadata] = useState(null);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+
+  useEffect(() => {
+    fetch(REWARD_NFT_METADATA_URI)
+      .then(res => res.json())
+      .then(meta => {
+        setNftMetadata(meta);
+        setIsLoadingMetadata(false);
+      })
+      .catch(err => {
+        console.error("Failed to load NFT metadata", err);
+        setIsLoadingMetadata(false);
+      });
+  }, []);
 
   const {
     hasUserClaimed,
@@ -29,7 +46,7 @@ export default function App({ contractAddress }) {
     refetchHasClaimed,
   } = useQuizContractReads(contractAddress);
 
-  const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
+  const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion || isLoadingMetadata;
 
   if (isInitialLoading) {
     return (
@@ -44,7 +61,6 @@ export default function App({ contractAddress }) {
       className="min-h-screen flex flex-col items-center justify-start p-8 bg-cover bg-center relative"
       style={{ backgroundImage: "url('/images/jungle-temple.png')" }}
     >
-      {/* Banner */}
       <div className="w-full max-w-screen-xl mx-auto mb-8">
         <img
           src="/images/quest-banner.webp"
@@ -53,7 +69,6 @@ export default function App({ contractAddress }) {
         />
       </div>
 
-      {/* Quiz Card */}
       <div className="relative w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-sandstone/90 backdrop-blur-sm rounded-xl shadow-soft p-8">
         <div className="bg-yellow-900 rounded-t-lg -mx-8 -mt-8 px-8 pt-6 pb-4 shadow-inner">
         <header className="flex flex-col sm:flex-row justify-between items-center">
@@ -70,41 +85,30 @@ export default function App({ contractAddress }) {
           ) : (
             <section className="space-y-6">
               {hasUserClaimed ? (
-                <Suspense fallback={<ClaimSuccessDisplayPlaceholder />}>
-                  <LazyClaimSuccessDisplay
-                    totalClaims={totalClaims}
-                    showImage={true}
-                  />
-                </Suspense>
+                <ClaimSuccessDisplay
+                  totalClaims={totalClaims}
+                  nftMetadata={nftMetadata}
+                  showImage={true}
+                />
               ) : (
-                <>
-                  <div className="mb-6">
-                    <img
-                      src="/images/placeholder.webp"
-                      alt="Placeholder image for NFT"
-                      className="w-full h-auto rounded-lg shadow-md object-cover"
-                    />
-                  </div>
-                  {/* Now QuizGame is rendered directly, no Suspense needed */}
-                  <QuizGame
-                    contractAddress={contractAddress}
-                    question={question}
-                    isLoadingAssignedQuestion={isLoadingAssignedQuestion}
-                    isErrorAssignedQuestion={isErrorAssignedQuestion}
-                    assignedQuestionError={assignedQuestionError}
-                    hasUserClaimed={hasUserClaimed}
-                    isLoadingHasClaimed={isLoadingHasClaimed}
-                    totalClaims={totalClaims}
-                    refetchTotalClaims={refetchTotalClaims}
-                    refetchHasClaimed={refetchHasClaimed}
-                  />
-                </>
+                <QuizGame
+                  contractAddress={contractAddress}
+                  question={question}
+                  isLoadingAssignedQuestion={isLoadingAssignedQuestion}
+                  isErrorAssignedQuestion={isErrorAssignedQuestion}
+                  assignedQuestionError={assignedQuestionError}
+                  hasUserClaimed={hasUserClaimed}
+                  isLoadingHasClaimed={isLoadingHasClaimed}
+                  totalClaims={totalClaims}
+                  refetchTotalClaims={refetchTotalClaims}
+                  refetchHasClaimed={refetchHasClaimed}
+                  nftMetadata={nftMetadata}
+                />
               )}
             </section>
           )}
         </div>
       </div>
-
       <Footer contractAddress={contractAddress} />
     </main>
   );

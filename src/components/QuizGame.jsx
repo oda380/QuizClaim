@@ -1,4 +1,4 @@
-// src/components/QuizGame.jsx
+// QuizGame.jsx
 import React, { useState, useEffect } from "react";
 import { useQuizContractWrites } from "../hooks/useQuizContractWrites";
 import { ProgressBar } from "./ProgressBar";
@@ -14,7 +14,8 @@ export const QuizGame = ({
   isLoadingHasClaimed,
   totalClaims,
   refetchTotalClaims,
-  refetchHasClaimed, // New prop
+  refetchHasClaimed,
+  nftMetadata, // New prop for pre-fetched metadata
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [displayStatus, setDisplayStatus] = useState("idle");
@@ -22,7 +23,6 @@ export const QuizGame = ({
   const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
   const [showOptimisticSuccess, setShowOptimisticSuccess] = useState(false);
 
-  // Use the custom hook which now exposes granular wagmi state
   const {
     handleClaimWrite,
     isWritePending,
@@ -35,7 +35,6 @@ export const QuizGame = ({
     reset,
   } = useQuizContractWrites(contractAddress, selectedAnswer);
 
-  // Unified effect to handle all transaction errors
   useEffect(() => {
     if (isTxError || isWriteError) {
       setShowOptimisticSuccess(false);
@@ -52,23 +51,17 @@ export const QuizGame = ({
     }
   }, [isTxError, isWriteError, txError, writeError]);
 
-  // Effect to handle a successful transaction confirmation
   useEffect(() => {
     if (isTxConfirmed) {
-      // The transaction was mined. Now we can refetch the on-chain data
-      // to ensure consistency.
       refetchTotalClaims();
       refetchHasClaimed();
     }
   }, [isTxConfirmed, refetchTotalClaims, refetchHasClaimed]);
 
-  // The function that triggers the optimistic UI and the transaction write
   const handleOptimisticClaim = () => {
-    // Reset state before a new attempt
     reset(); 
     setDisplayErrorMessage("");
     setDisplayStatus("idle");
-
     if (selectedAnswer) {
       setShowOptimisticSuccess(true);
       handleClaimWrite();
@@ -76,9 +69,9 @@ export const QuizGame = ({
   };
 
   // --- Render logic ---
-  // The first check is for the optimistic success state.
   if (showOptimisticSuccess) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
+    // Pass the pre-fetched metadata directly
+    return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
   }
   
   if (isLoadingHasClaimed) {
@@ -89,8 +82,9 @@ export const QuizGame = ({
     );
   }
 
+  // NOTE: This check is now here to ensure ClaimSuccessDisplay is a single unit
   if (hasUserClaimed) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
+    return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
   }
 
   if (isLoadingAssignedQuestion) {
@@ -130,6 +124,14 @@ export const QuizGame = ({
 
   return (
     <>
+      {/* The image is now part of the QuizGame component's render */}
+      <div className="mb-6">
+        <img
+          src={nftMetadata ? nftMetadata.image : "/images/placeholder.webp"}
+          alt={nftMetadata ? nftMetadata.name : "Placeholder image for NFT"}
+          className="w-full h-auto rounded-lg shadow-md object-cover"
+        />
+      </div>
       <p className="text-xl text-slate font-medium mb-4">{question.question}</p>
       <div className="grid gap-4">
         {question.options.map((opt, i) => (
