@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useQuizContractWrites } from "../hooks/useQuizContractWrites";
+import { useContractWrite, useWaitForTransactionReceipt } from "wagmi";
 import { ProgressBar } from "./ProgressBar";
 import { ClaimSuccessDisplay } from "./ClaimSuccessDisplay";
+import abi from "../abi/QuizClaim.json"; // Assuming abi is now imported directly here
 
 export const QuizGame = ({
   contractAddress,
@@ -18,22 +19,40 @@ export const QuizGame = ({
   const [displayStatus, setDisplayStatus] = useState("idle");
   const [displayErrorMessage, setDisplayErrorMessage] = useState("");
   const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
+  const [showOptimisticSuccess, setShowOptimisticSuccess] = useState(false);
 
-  // CORRECTED: onSuccess callback now triggers a local state change and refetches data.
+  // 1. Use the useContractWrite hook to send the transaction.
   const {
-    handleClaimWrite,
-    isLoadingTx,
-    isConfirming,
-    isSuccess,
-    // Note: We are no longer using txStatus, as it seems to be the source of the issue.
-  } = useQuizContractWrites(
-    contractAddress,
-    selectedAnswer,
-    () => {
-      // This is now just a placeholder; the main logic is moved to a useEffect hook.
-    },
-    (error) => {
-      const rawErrorMessage = error?.shortMessage || error?.message || "An unknown error occurred.";
+    write,
+    data: transactionData,
+    isLoading: isWriteLoading,
+    isError: isWriteError,
+    error: writeError,
+  } = useContractWrite({
+    address: contractAddress,
+    abi,
+    functionName: "claim",
+    args: [selectedAnswer],
+  });
+
+  // 2. Use the useWaitForTransactionReceipt hook to monitor the transaction's status on the chain.
+  const {
+    isLoading: isConfirming,
+    isSuccess: isTxConfirmed,
+    isError: isTxError,
+    error: txError,
+  } = useWaitForTransactionReceipt({
+    hash: transactionData?.hash,
+  });
+
+  // 3. Effect to handle transaction failures
+  useEffect(() => {
+    if (isTxError || isWriteError) {
+      // Transaction failed on-chain or failed to be sent.
+      setShowOptimisticSuccess(false);
+      const error = txError || writeError;
+      const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
+
       if (rawErrorMessage.includes("Incorrect answer")) {
         setDisplayErrorMessage("You chose poorly");
         setIsWrongAnswerAttempt(true);
@@ -43,43 +62,28 @@ export const QuizGame = ({
       }
       setDisplayStatus("error");
     }
-  );
+  }, [isTxError, isWriteError, txError, writeError]);
 
-  // New useEffect hook to handle a successful transaction.
-  // This is a more reliable way to react to the `isSuccess` state.
+  // 4. Effect to handle a successful transaction confirmation
   useEffect(() => {
-    if (isSuccess) {
-      setDisplayStatus("success");
+    if (isTxConfirmed) {
+      // The transaction was mined and confirmed. Now we can be sure
+      // the on-chain state is updated. Refetch the data to get accurate counts.
       refetchTotalClaims();
-      setIsWrongAnswerAttempt(false);
+      // At this point, hasUserClaimed will be true on the next read cycle.
     }
-  }, [isSuccess, refetchTotalClaims]);
+  }, [isTxConfirmed, refetchTotalClaims]);
 
+  // 5. Unified handler for the claim action
+  const handleClaim = () => {
+    // Optimistically show the success screen as soon as the user triggers the write action
+    setShowOptimisticSuccess(true);
+    // Execute the write function from wagmi
+    write();
+  };
 
-  useEffect(() => {
-    if (isErrorAssignedQuestion) {
-      const reason = assignedQuestionError?.shortMessage || assignedQuestionError?.message || "The ancient scrolls are unreadable.";
-      setDisplayErrorMessage(reason);
-      setDisplayStatus("error");
-      setIsWrongAnswerAttempt(false);
-    } else if (!isLoadingAssignedQuestion && !question && !hasUserClaimed) {
-      setDisplayErrorMessage("No quest assigned to your address.");
-      setDisplayStatus("error");
-      setIsWrongAnswerAttempt(false);
-    }
-  }, [isErrorAssignedQuestion, assignedQuestionError, isLoadingAssignedQuestion, question, hasUserClaimed]);
-
-
-  // CORRECTED: Simplified button text logic
-  const btnText = isLoadingTx
-    ? "Confirm…"
-    : isConfirming
-    ? "Minting…"
-    : isSuccess
-    ? "Minted!"
-    : "Claim NFT";
-
-
+  // --- Render logic ---
+  // The first checks are for the initial data loading states
   if (isLoadingHasClaimed) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -88,10 +92,18 @@ export const QuizGame = ({
     );
   }
 
+  // Check if the user has already claimed the token.
   if (hasUserClaimed) {
     return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
   }
+  
+  // Check if we are optimistically showing the success state.
+  // This will be true immediately after the user sends the transaction.
+  if (showOptimisticSuccess) {
+    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
+  }
 
+  // The rest of the initial loading and error states for the quiz itself.
   if (isLoadingAssignedQuestion) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -109,7 +121,7 @@ export const QuizGame = ({
         {displayErrorMessage}
       </div>
     );
-  }
+  );
 
   if (!question) {
     return (
@@ -118,12 +130,15 @@ export const QuizGame = ({
       </div>
     );
   }
+  
+  // Final render for the quiz game itself
+  const btnText = isWriteLoading
+    ? "Confirming in Wallet…"
+    : isConfirming
+    ? "Minting…"
+    : "Claim NFT";
 
-  // CORRECTED: The `ClaimSuccessDisplay` is now returned when `isSuccess` is true
-  if (isSuccess) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
-  }
-
+  const isDisabled = !selectedAnswer || isWriteLoading || isConfirming;
 
   return (
     <>
@@ -143,16 +158,15 @@ export const QuizGame = ({
         ))}
       </div>
       <button
-        onClick={handleClaimWrite}
-        // CORRECTED: Simplified the disabled logic
-        disabled={!selectedAnswer || isLoadingTx || isConfirming || isSuccess}
+        onClick={handleClaim}
+        disabled={isDisabled}
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
-          ${!selectedAnswer || isLoadingTx || isConfirming || isSuccess
+          ${isDisabled
             ? 'bg-slate/40 text-slate/60 cursor-not-allowed'
             : 'bg-canopy text-slate hover:bg-moss'}`}
       >
         {btnText}
-        {(isLoadingTx || isConfirming) && (
+        {(isWriteLoading || isConfirming) && (
           <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full" />
         )}
       </button>
