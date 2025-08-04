@@ -17,12 +17,13 @@ export const QuizGame = ({
   refetchHasClaimed,
   nftMetadata,
 }) => {
-  const { getGatewayUrl } = useIpfsGatewayContext();
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [displayStatus, setDisplayStatus] = useState("idle");
   const [displayErrorMessage, setDisplayErrorMessage] = useState("");
   const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
-  const [showOptimisticSuccess, setShowOptimisticSuccess] = useState(false);
+  const { getGatewayUrl } = useIpfsGatewayContext();
+
+  const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
 
   const {
     handleClaimWrite,
@@ -38,7 +39,8 @@ export const QuizGame = ({
 
   useEffect(() => {
     if (isTxError || isWriteError) {
-      setShowOptimisticSuccess(false);
+      setIsCheckingAnswer(false);
+      reset();
       const error = txError || writeError;
       const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
       if (rawErrorMessage.includes("Incorrect answer")) {
@@ -50,30 +52,38 @@ export const QuizGame = ({
       }
       setDisplayStatus("error");
     }
-  }, [isTxError, isWriteError, txError, writeError]);
-
-  useEffect(() => {
     if (isTxConfirmed) {
+      setIsCheckingAnswer(false);
       refetchTotalClaims();
       refetchHasClaimed();
     }
-  }, [isTxConfirmed, refetchTotalClaims, refetchHasClaimed]);
+  }, [isTxError, isWriteError, txError, writeError, isTxConfirmed, reset, refetchTotalClaims, refetchHasClaimed]);
 
-  const handleOptimisticClaim = () => {
-    reset(); 
+
+  const handleClaim = () => {
+    setIsCheckingAnswer(true);
     setDisplayErrorMessage("");
     setDisplayStatus("idle");
     if (selectedAnswer) {
-      setShowOptimisticSuccess(true);
       handleClaimWrite();
     }
   };
 
-  // --- Render logic ---
-  if (showOptimisticSuccess) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
+  const btnText = isWritePending
+    ? "Confirming in Wallet…"
+    : isConfirming
+    ? "Checking..."
+    : "Claim NFT";
+
+  const isDisabled = !selectedAnswer || isWritePending || isConfirming || isCheckingAnswer;
+
+  let loadingMessage = "Checking your answer...";
+  if (isWritePending) {
+    loadingMessage = "Please open your wallet and sign the transaction...";
+  } else if (isConfirming) {
+    loadingMessage = "Verifying your transaction...";
   }
-  
+
   if (isLoadingHasClaimed) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -113,27 +123,16 @@ export const QuizGame = ({
     );
   }
   
-  const btnText = isWritePending
-    ? "Confirming in Wallet…"
-    : isConfirming
-    ? "Minting…"
-    : "Claim NFT";
-
-  const isDisabled = !selectedAnswer || isWritePending || isConfirming;
-
-  // --- UPDATED LOGIC FOR THE IMAGE URL ---
-  const placeholderImageUrl = "/images/placeholder.webp";
-  const rewardImageUrl = nftMetadata ? getGatewayUrl(nftMetadata.image) : placeholderImageUrl;
-  
-  const imageUrl = showOptimisticSuccess ? rewardImageUrl : placeholderImageUrl;
-  // ----------------------------------------
+  const imageUrl = "/images/placeholder.webp";
 
   return (
-    <>
+    // This is the new parent container with relative positioning
+    <div className="relative"> 
+      {/* This is the regular quiz content */}
       <div className="mb-6">
         <img
           src={imageUrl}
-          alt={nftMetadata ? nftMetadata.name : "Placeholder image for NFT"}
+          alt="Placeholder image for NFT"
           className="w-full h-auto rounded-lg shadow-md object-cover"
         />
       </div>
@@ -143,6 +142,7 @@ export const QuizGame = ({
           <button
             key={i}
             onClick={() => setSelectedAnswer(opt)}
+            disabled={isCheckingAnswer || isWritePending || isConfirming}
             className={`w-full py-3 rounded-lg font-medium transition transform duration-150
               ${selectedAnswer === opt
                 ? 'bg-canopy text-ivory border border-canopy'
@@ -153,7 +153,7 @@ export const QuizGame = ({
         ))}
       </div>
       <button
-        onClick={handleOptimisticClaim}
+        onClick={handleClaim}
         disabled={isDisabled}
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
           ${isDisabled
@@ -161,12 +161,19 @@ export const QuizGame = ({
             : 'bg-canopy text-slate hover:bg-moss'}`}
       >
         {btnText}
-        {(isWritePending || isConfirming) && (
-          <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full" />
-        )}
       </button>
       <ProgressBar totalClaims={totalClaims} />
-    </>
+
+      {/* --- This is the new conditional overlay --- */}
+      {(isCheckingAnswer || isWritePending || isConfirming) && (
+        <div className="absolute inset-0 bg-sandstone/70 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 text-center text-slate animate-fade-in">
+          <div className="text-xl font-medium flex items-center">
+            <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full mr-2" />
+            {loadingMessage}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
