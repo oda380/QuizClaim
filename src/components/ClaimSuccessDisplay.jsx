@@ -1,13 +1,28 @@
-import React from "react";
+// ClaimSuccessDisplay.jsx (updated to use Context)
+import React, { useEffect, useState } from "react";
+import { REWARD_NFT_METADATA_URI } from "../constants";
 import { ProgressBar } from "./ProgressBar";
-import { useIpfsGatewayContext } from '../context/IpfsGatewayContext';
+import { useIpfsGatewayContext } from '../context/IpfsGatewayContext'; // Import context hook
 
-export const ClaimSuccessDisplay = ({ totalClaims, showImage = true, nftMetadata }) => {
-  const { getGatewayUrl } = useIpfsGatewayContext();
-  
-  const finalImageUrl = nftMetadata ? getGatewayUrl(nftMetadata.image) : "/images/placeholder.webp";
+export const ClaimSuccessDisplay = ({ totalClaims, showImage = true }) => {
+  const [nftMetadata, setNftMetadata] = useState(null);
+  const [ipfsImageCid, setIpfsImageCid] = useState(null);
+  const { getGatewayUrl } = useIpfsGatewayContext(); // Use the context hook
+
+  useEffect(() => {
+    fetch(REWARD_NFT_METADATA_URI)
+      .then(res => res.json())
+      .then(meta => {
+        setNftMetadata(meta);
+        setIpfsImageCid(meta.image);
+      })
+      .catch(err => console.error("Failed to load NFT metadata", err));
+  }, []);
+
+  const finalImageUrl = ipfsImageCid ? getGatewayUrl(ipfsImageCid) : "/images/placeholder.webp";
 
   return (
+    // ... rest of your component remains the same
     <div className="mt-6 p-5 bg-sunlit text-slate rounded-lg text-center font-medium animate-fade-in">
       ✨ You have chosen wisely!
       {showImage && (

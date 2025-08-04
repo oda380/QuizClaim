@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useQuizContractWrites } from "../hooks/useQuizContractWrites";
 import { ProgressBar } from "./ProgressBar";
 import { ClaimSuccessDisplay } from "./ClaimSuccessDisplay";
-import { useIpfsGatewayContext } from '../context/IpfsGatewayContext';
 
 export const QuizGame = ({
   contractAddress,
@@ -14,37 +13,27 @@ export const QuizGame = ({
   isLoadingHasClaimed,
   totalClaims,
   refetchTotalClaims,
-  refetchHasClaimed,
-  nftMetadata,
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [displayStatus, setDisplayStatus] = useState("idle");
   const [displayErrorMessage, setDisplayErrorMessage] = useState("");
   const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
-  const { getGatewayUrl } = useIpfsGatewayContext();
 
-  const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
-  const [isPreparingReward, setIsPreparingReward] = useState(false);
-
+  // CORRECTED: onSuccess callback now triggers a local state change and refetches data.
   const {
     handleClaimWrite,
-    isWritePending,
-    isWriteError,
-    writeError,
+    isLoadingTx,
     isConfirming,
-    isTxConfirmed,
-    isTxError,
-    txError,
-    reset,
-  } = useQuizContractWrites(contractAddress, selectedAnswer);
-
-  useEffect(() => {
-    if (isTxError || isWriteError) {
-      setIsCheckingAnswer(false);
-      setIsPreparingReward(false);
-      reset();
-      const error = txError || writeError;
-      const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
+    isSuccess,
+    // Note: We are no longer using txStatus, as it seems to be the source of the issue.
+  } = useQuizContractWrites(
+    contractAddress,
+    selectedAnswer,
+    () => {
+      // This is now just a placeholder; the main logic is moved to a useEffect hook.
+    },
+    (error) => {
+      const rawErrorMessage = error?.shortMessage || error?.message || "An unknown error occurred.";
       if (rawErrorMessage.includes("Incorrect answer")) {
         setDisplayErrorMessage("You chose poorly");
         setIsWrongAnswerAttempt(true);
@@ -54,44 +43,42 @@ export const QuizGame = ({
       }
       setDisplayStatus("error");
     }
-    if (isTxConfirmed) {
-      setIsCheckingAnswer(false);
-      setIsPreparingReward(true);
+  );
+
+  // New useEffect hook to handle a successful transaction.
+  // This is a more reliable way to react to the `isSuccess` state.
+  useEffect(() => {
+    if (isSuccess) {
+      setDisplayStatus("success");
       refetchTotalClaims();
-      refetchHasClaimed();
+      setIsWrongAnswerAttempt(false);
     }
-  }, [isTxError, isWriteError, txError, writeError, isTxConfirmed, reset, refetchTotalClaims, refetchHasClaimed]);
+  }, [isSuccess, refetchTotalClaims]);
 
 
-  const handleClaim = () => {
-    setIsCheckingAnswer(true);
-    setDisplayErrorMessage("");
-    setDisplayStatus("idle");
-    if (selectedAnswer) {
-      handleClaimWrite();
+  useEffect(() => {
+    if (isErrorAssignedQuestion) {
+      const reason = assignedQuestionError?.shortMessage || assignedQuestionError?.message || "The ancient scrolls are unreadable.";
+      setDisplayErrorMessage(reason);
+      setDisplayStatus("error");
+      setIsWrongAnswerAttempt(false);
+    } else if (!isLoadingAssignedQuestion && !question && !hasUserClaimed) {
+      setDisplayErrorMessage("No quest assigned to your address.");
+      setDisplayStatus("error");
+      setIsWrongAnswerAttempt(false);
     }
-  };
+  }, [isErrorAssignedQuestion, assignedQuestionError, isLoadingAssignedQuestion, question, hasUserClaimed]);
 
-  const btnText = isWritePending
-    ? "Confirming in Wallet…"
+
+  // CORRECTED: Simplified button text logic
+  const btnText = isLoadingTx
+    ? "Confirm…"
     : isConfirming
-    ? "Checking..."
+    ? "Minting…"
+    : isSuccess
+    ? "Minted!"
     : "Claim NFT";
 
-  // The 'Claim NFT' button is disabled until an answer is selected and no process is running.
-  const isDisabled = !selectedAnswer || isWritePending || isConfirming || isCheckingAnswer || isPreparingReward;
-
-  // The options should only be disabled when a process is running.
-  const isProcessing = isCheckingAnswer || isWritePending || isConfirming || isPreparingReward;
-
-  let loadingMessage = "Checking your answer...";
-  if (isWritePending) {
-    loadingMessage = "Please open your wallet and confirm the transaction...";
-  } else if (isConfirming) {
-    loadingMessage = "Verifying your transaction...";
-  } else if (isPreparingReward) {
-    loadingMessage = "Transaction confirmed. Preparing your reward...";
-  }
 
   if (isLoadingHasClaimed) {
     return (
@@ -102,7 +89,7 @@ export const QuizGame = ({
   }
 
   if (hasUserClaimed) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} nftMetadata={nftMetadata} showImage={true} />;
+    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
   }
 
   if (isLoadingAssignedQuestion) {
@@ -131,25 +118,21 @@ export const QuizGame = ({
       </div>
     );
   }
-  
-  const imageUrl = "/images/placeholder.webp";
+
+  // CORRECTED: The `ClaimSuccessDisplay` is now returned when `isSuccess` is true
+  if (isSuccess) {
+    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
+  }
+
 
   return (
-    <div className="relative">
-      <div className="mb-6">
-        <img
-          src={imageUrl}
-          alt="Placeholder image for NFT"
-          className="w-full h-auto rounded-lg shadow-md object-cover"
-        />
-      </div>
+    <>
       <p className="text-xl text-slate font-medium mb-4">{question.question}</p>
       <div className="grid gap-4">
         {question.options.map((opt, i) => (
           <button
             key={i}
             onClick={() => setSelectedAnswer(opt)}
-            disabled={isProcessing} // <-- CORRECTED: Use 'isProcessing'
             className={`w-full py-3 rounded-lg font-medium transition transform duration-150
               ${selectedAnswer === opt
                 ? 'bg-canopy text-ivory border border-canopy'
@@ -160,26 +143,21 @@ export const QuizGame = ({
         ))}
       </div>
       <button
-        onClick={handleClaim}
-        disabled={isDisabled} // <-- CORRECT: Use 'isDisabled'
+        onClick={handleClaimWrite}
+        // CORRECTED: Simplified the disabled logic
+        disabled={!selectedAnswer || isLoadingTx || isConfirming || isSuccess}
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
-          ${isDisabled
+          ${!selectedAnswer || isLoadingTx || isConfirming || isSuccess
             ? 'bg-slate/40 text-slate/60 cursor-not-allowed'
             : 'bg-canopy text-slate hover:bg-moss'}`}
       >
         {btnText}
+        {(isLoadingTx || isConfirming) && (
+          <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full" />
+        )}
       </button>
       <ProgressBar totalClaims={totalClaims} />
-
-      {(isCheckingAnswer || isWritePending || isConfirming || isPreparingReward) && (
-        <div className="absolute inset-0 bg-sandstone/70 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 text-center text-slate animate-fade-in">
-          <div className="text-xl font-medium flex items-center">
-            <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full mr-2" />
-            {loadingMessage}
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
