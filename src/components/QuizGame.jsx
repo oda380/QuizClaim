@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useContractWrite, useWaitForTransactionReceipt } from "wagmi";
 import { ProgressBar } from "./ProgressBar";
 import { ClaimSuccessDisplay } from "./ClaimSuccessDisplay";
-import abi from "../abi/QuizClaim.json"; // Assuming abi is now imported directly here
+import abi from "../abi/QuizClaim.json"; // Assuming this is the correct path to your ABI
 
 export const QuizGame = ({
   contractAddress,
@@ -23,32 +23,30 @@ export const QuizGame = ({
 
   // 1. Use the useContractWrite hook to send the transaction.
   const {
-    write,
     data: transactionData,
-    isLoading: isWriteLoading,
+    writeContract,
+    isPending: isWritePending,
     isError: isWriteError,
     error: writeError,
   } = useContractWrite({
     address: contractAddress,
     abi,
     functionName: "claim",
-    args: [selectedAnswer],
   });
 
-  // 2. Use the useWaitForTransactionReceipt hook to monitor the transaction's status on the chain.
+  // 2. Use the useWaitForTransactionReceipt hook to monitor the transaction's status.
   const {
     isLoading: isConfirming,
     isSuccess: isTxConfirmed,
     isError: isTxError,
     error: txError,
   } = useWaitForTransactionReceipt({
-    hash: transactionData?.hash,
+    hash: transactionData,
   });
 
-  // 3. Effect to handle transaction failures
+  // 3. Unified effect to handle all transaction errors
   useEffect(() => {
     if (isTxError || isWriteError) {
-      // Transaction failed on-chain or failed to be sent.
       setShowOptimisticSuccess(false);
       const error = txError || writeError;
       const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
@@ -67,23 +65,28 @@ export const QuizGame = ({
   // 4. Effect to handle a successful transaction confirmation
   useEffect(() => {
     if (isTxConfirmed) {
-      // The transaction was mined and confirmed. Now we can be sure
-      // the on-chain state is updated. Refetch the data to get accurate counts.
       refetchTotalClaims();
-      // At this point, hasUserClaimed will be true on the next read cycle.
     }
   }, [isTxConfirmed, refetchTotalClaims]);
 
-  // 5. Unified handler for the claim action
+  // 5. The function that triggers the optimistic UI and the transaction write
   const handleClaim = () => {
-    // Optimistically show the success screen as soon as the user triggers the write action
-    setShowOptimisticSuccess(true);
-    // Execute the write function from wagmi
-    write();
+    // Only attempt to write if a valid answer is selected
+    if (selectedAnswer) {
+      setShowOptimisticSuccess(true);
+      writeContract({
+        args: [selectedAnswer],
+      });
+    }
   };
 
   // --- Render logic ---
-  // The first checks are for the initial data loading states
+  // The first check is for the optimistic success state.
+  if (showOptimisticSuccess) {
+    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
+  }
+
+  // Then, we check for other states as before.
   if (isLoadingHasClaimed) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -92,18 +95,10 @@ export const QuizGame = ({
     );
   }
 
-  // Check if the user has already claimed the token.
   if (hasUserClaimed) {
     return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
   }
-  
-  // Check if we are optimistically showing the success state.
-  // This will be true immediately after the user sends the transaction.
-  if (showOptimisticSuccess) {
-    return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
-  }
 
-  // The rest of the initial loading and error states for the quiz itself.
   if (isLoadingAssignedQuestion) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -121,7 +116,7 @@ export const QuizGame = ({
         {displayErrorMessage}
       </div>
     );
-  );
+  }
 
   if (!question) {
     return (
@@ -132,13 +127,13 @@ export const QuizGame = ({
   }
   
   // Final render for the quiz game itself
-  const btnText = isWriteLoading
+  const btnText = isWritePending
     ? "Confirming in Wallet…"
     : isConfirming
     ? "Minting…"
     : "Claim NFT";
 
-  const isDisabled = !selectedAnswer || isWriteLoading || isConfirming;
+  const isDisabled = !selectedAnswer || isWritePending || isConfirming;
 
   return (
     <>
@@ -166,7 +161,7 @@ export const QuizGame = ({
             : 'bg-canopy text-slate hover:bg-moss'}`}
       >
         {btnText}
-        {(isWriteLoading || isConfirming) && (
+        {(isWritePending || isConfirming) && (
           <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full" />
         )}
       </button>
