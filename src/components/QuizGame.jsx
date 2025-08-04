@@ -24,6 +24,7 @@ export const QuizGame = ({
   const { getGatewayUrl } = useIpfsGatewayContext();
 
   const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
+  const [isPreparingReward, setIsPreparingReward] = useState(false);
 
   const {
     handleClaimWrite,
@@ -40,6 +41,7 @@ export const QuizGame = ({
   useEffect(() => {
     if (isTxError || isWriteError) {
       setIsCheckingAnswer(false);
+      setIsPreparingReward(false);
       reset();
       const error = txError || writeError;
       const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
@@ -54,6 +56,7 @@ export const QuizGame = ({
     }
     if (isTxConfirmed) {
       setIsCheckingAnswer(false);
+      setIsPreparingReward(true);
       refetchTotalClaims();
       refetchHasClaimed();
     }
@@ -75,13 +78,19 @@ export const QuizGame = ({
     ? "Checking..."
     : "Claim NFT";
 
-  const isDisabled = !selectedAnswer || isWritePending || isConfirming || isCheckingAnswer;
+  // The 'Claim NFT' button is disabled until an answer is selected and no process is running.
+  const isDisabled = !selectedAnswer || isWritePending || isConfirming || isCheckingAnswer || isPreparingReward;
+
+  // The options should only be disabled when a process is running.
+  const isProcessing = isCheckingAnswer || isWritePending || isConfirming || isPreparingReward;
 
   let loadingMessage = "Checking your answer...";
   if (isWritePending) {
-    loadingMessage = "Please open your wallet and sign the transaction...";
+    loadingMessage = "Please open your wallet and confirm the transaction...";
   } else if (isConfirming) {
     loadingMessage = "Verifying your transaction...";
+  } else if (isPreparingReward) {
+    loadingMessage = "Transaction confirmed. Preparing your reward...";
   }
 
   if (isLoadingHasClaimed) {
@@ -126,9 +135,7 @@ export const QuizGame = ({
   const imageUrl = "/images/placeholder.webp";
 
   return (
-    // This is the new parent container with relative positioning
-    <div className="relative"> 
-      {/* This is the regular quiz content */}
+    <div className="relative">
       <div className="mb-6">
         <img
           src={imageUrl}
@@ -142,7 +149,7 @@ export const QuizGame = ({
           <button
             key={i}
             onClick={() => setSelectedAnswer(opt)}
-            disabled={isCheckingAnswer || isWritePending || isConfirming}
+            disabled={isProcessing} // <-- CORRECTED: Use 'isProcessing'
             className={`w-full py-3 rounded-lg font-medium transition transform duration-150
               ${selectedAnswer === opt
                 ? 'bg-canopy text-ivory border border-canopy'
@@ -154,7 +161,7 @@ export const QuizGame = ({
       </div>
       <button
         onClick={handleClaim}
-        disabled={isDisabled}
+        disabled={isDisabled} // <-- CORRECT: Use 'isDisabled'
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
           ${isDisabled
             ? 'bg-slate/40 text-slate/60 cursor-not-allowed'
@@ -164,8 +171,7 @@ export const QuizGame = ({
       </button>
       <ProgressBar totalClaims={totalClaims} />
 
-      {/* --- This is the new conditional overlay --- */}
-      {(isCheckingAnswer || isWritePending || isConfirming) && (
+      {(isCheckingAnswer || isWritePending || isConfirming || isPreparingReward) && (
         <div className="absolute inset-0 bg-sandstone/70 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 text-center text-slate animate-fade-in">
           <div className="text-xl font-medium flex items-center">
             <span className="ml-2 inline-block animate-spin h-5 w-5 border-2 border-slate border-t-transparent rounded-full mr-2" />
