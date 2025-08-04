@@ -1,8 +1,8 @@
+// src/components/QuizGame.jsx
 import React, { useState, useEffect } from "react";
-import { useContractWrite, useWaitForTransactionReceipt } from "wagmi";
+import { useQuizContractWrites } from "../hooks/useQuizContractWrites";
 import { ProgressBar } from "./ProgressBar";
 import { ClaimSuccessDisplay } from "./ClaimSuccessDisplay";
-import abi from "../abi/QuizClaim.json"; // Assuming this is the correct path to your ABI
 
 export const QuizGame = ({
   contractAddress,
@@ -14,6 +14,7 @@ export const QuizGame = ({
   isLoadingHasClaimed,
   totalClaims,
   refetchTotalClaims,
+  refetchHasClaimed, // New prop
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [displayStatus, setDisplayStatus] = useState("idle");
@@ -21,36 +22,25 @@ export const QuizGame = ({
   const [isWrongAnswerAttempt, setIsWrongAnswerAttempt] = useState(false);
   const [showOptimisticSuccess, setShowOptimisticSuccess] = useState(false);
 
-  // 1. Use the useContractWrite hook to send the transaction.
+  // Use the custom hook which now exposes granular wagmi state
   const {
-    data: transactionData,
-    writeContract,
-    isPending: isWritePending,
-    isError: isWriteError,
-    error: writeError,
-  } = useContractWrite({
-    address: contractAddress,
-    abi,
-    functionName: "claim",
-  });
+    handleClaimWrite,
+    isWritePending,
+    isWriteError,
+    writeError,
+    isConfirming,
+    isTxConfirmed,
+    isTxError,
+    txError,
+    reset,
+  } = useQuizContractWrites(contractAddress, selectedAnswer);
 
-  // 2. Use the useWaitForTransactionReceipt hook to monitor the transaction's status.
-  const {
-    isLoading: isConfirming,
-    isSuccess: isTxConfirmed,
-    isError: isTxError,
-    error: txError,
-  } = useWaitForTransactionReceipt({
-    hash: transactionData,
-  });
-
-  // 3. Unified effect to handle all transaction errors
+  // Unified effect to handle all transaction errors
   useEffect(() => {
     if (isTxError || isWriteError) {
       setShowOptimisticSuccess(false);
       const error = txError || writeError;
       const rawErrorMessage = error?.shortMessage || error?.message || "An unknown transaction error occurred.";
-
       if (rawErrorMessage.includes("Incorrect answer")) {
         setDisplayErrorMessage("You chose poorly");
         setIsWrongAnswerAttempt(true);
@@ -62,21 +52,26 @@ export const QuizGame = ({
     }
   }, [isTxError, isWriteError, txError, writeError]);
 
-  // 4. Effect to handle a successful transaction confirmation
+  // Effect to handle a successful transaction confirmation
   useEffect(() => {
     if (isTxConfirmed) {
+      // The transaction was mined. Now we can refetch the on-chain data
+      // to ensure consistency.
       refetchTotalClaims();
+      refetchHasClaimed();
     }
-  }, [isTxConfirmed, refetchTotalClaims]);
+  }, [isTxConfirmed, refetchTotalClaims, refetchHasClaimed]);
 
-  // 5. The function that triggers the optimistic UI and the transaction write
-  const handleClaim = () => {
-    // Only attempt to write if a valid answer is selected
+  // The function that triggers the optimistic UI and the transaction write
+  const handleOptimisticClaim = () => {
+    // Reset state before a new attempt
+    reset(); 
+    setDisplayErrorMessage("");
+    setDisplayStatus("idle");
+
     if (selectedAnswer) {
       setShowOptimisticSuccess(true);
-      writeContract({
-        args: [selectedAnswer],
-      });
+      handleClaimWrite();
     }
   };
 
@@ -85,8 +80,7 @@ export const QuizGame = ({
   if (showOptimisticSuccess) {
     return <ClaimSuccessDisplay totalClaims={totalClaims} showImage={true} />;
   }
-
-  // Then, we check for other states as before.
+  
   if (isLoadingHasClaimed) {
     return (
       <div className="p-5 bg-moss text-slate rounded-lg text-center font-medium">
@@ -126,7 +120,6 @@ export const QuizGame = ({
     );
   }
   
-  // Final render for the quiz game itself
   const btnText = isWritePending
     ? "Confirming in Wallet…"
     : isConfirming
@@ -153,7 +146,7 @@ export const QuizGame = ({
         ))}
       </div>
       <button
-        onClick={handleClaim}
+        onClick={handleOptimisticClaim}
         disabled={isDisabled}
         className={`w-full py-4 mt-6 rounded-lg text-lg font-display transition-all duration-200 shadow-soft
           ${isDisabled

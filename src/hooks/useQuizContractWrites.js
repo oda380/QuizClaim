@@ -1,84 +1,72 @@
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+// src/hooks/useQuizContractReads.js
+import { useAccount, useContractRead } from "wagmi";
 import abi from "../abi/QuizClaim.json";
-import { useState, useEffect } from "react";
+import QUESTIONS from "../questions.json";
 
-export const useQuizContractWrites = (contractAddress, selectedAnswer, onClaimSuccess, onClaimError) => {
-  const [txStatus, setTxStatus] = useState("idle");
-  const [txErrorMessage, setTxErrorMessage] = useState("");
+export const useQuizContractReads = (contractAddress) => {
+  const { address, isConnected } = useAccount();
 
-  // --- CHANGE #1: Initialize useWriteContract with NO arguments ---
+  // Read hasClaimed status for the connected address.
+  // We'll remove 'watch: true' and rely on manual refetching.
   const {
-    data: txData,
-    isPending: isWritePending,
-    isError: isWriteError,
-    error: writeError,
-    writeContract,
-    reset // It's good practice to get the reset function to clear errors
-  } = useWriteContract();
-
-  const handleClaimWrite = () => {
-    // Reset previous errors before a new attempt
-    setTxErrorMessage("");
-    reset(); 
-    setTxStatus("submitting");
-
-    if (typeof writeContract !== 'function') {
-      const errorMessage = "Transaction cannot be initiated. Ensure wallet is connected.";
-      console.error("ERROR: 'writeContract' is not a function.");
-      setTxErrorMessage(errorMessage);
-      setTxStatus("error");
-      onClaimError(new Error(errorMessage));
-      return;
-    }
-
-    // --- CHANGE #2: Pass the configuration object HERE ---
-    writeContract({
-      address: contractAddress,
-      abi,
-      functionName: "claim",
-      args: [selectedAnswer.trim().toLowerCase()],
-    });
-  };
-
-  // This effect handles the outcome of the writeContract call
-  useEffect(() => {
-    if (isWriteError && writeError) {
-      const reason = writeError?.shortMessage || writeError?.message || "Transaction failed.";
-      console.error("Error from useWriteContract:", writeError);
-      setTxErrorMessage(reason);
-      setTxStatus("error");
-      onClaimError(writeError);
-    }
-  }, [isWriteError, writeError, onClaimError]);
-
-
-  // This hook waits for the transaction to be confirmed
-  const {
-    isLoading: isConfirming,
-    isSuccess,
-  } = useWaitForTransactionReceipt({
-    hash: txData?.hash,
-    onSuccess: (receipt) => {
-      setTxStatus("success");
-      onClaimSuccess(receipt);
-    },
-    onError: (error) => {
-      const reason = error?.shortMessage || error?.message || "Transaction confirmation failed.";
-      console.error("Transaction confirmation error:", error);
-      setTxErrorMessage(reason);
-      setTxStatus("error");
-      onClaimError(error);
-    },
+    data: hasUserClaimed,
+    isLoading: isLoadingHasClaimed,
+    refetch: refetchHasClaimed,
+  } = useContractRead({
+    address: contractAddress,
+    abi,
+    functionName: "hasClaimed",
+    args: [address],
+    enabled: isConnected && !!address,
   });
 
-  const isLoadingTx = isWritePending || isConfirming;
+  // Fetch assigned question (only if user hasn't claimed yet)
+  const {
+    data: assignedQuestionIndexRaw,
+    isLoading: isLoadingAssignedQuestion,
+    isError: isErrorAssignedQuestion,
+    error: assignedQuestionError,
+  } = useContractRead({
+    address: contractAddress,
+    abi,
+    functionName: "getAssignedQuestion",
+    args: [address],
+    enabled: isConnected && !!address && hasUserClaimed === false,
+  });
+
+  // Read totalClaims from the contract
+  // We'll also remove 'watch: true' here and rely on manual refetching.
+  const {
+    data: totalClaimsData,
+    refetch: refetchTotalClaims,
+  } = useContractRead({
+    address: contractAddress,
+    abi,
+    functionName: "totalClaims",
+  });
+
+  const totalClaims = totalClaimsData ? Number(totalClaimsData) : 0;
+
+  // Determine the actual question object
+  const assignedQuestionIndex = assignedQuestionIndexRaw !== undefined && assignedQuestionIndexRaw !== null
+    ? Number(assignedQuestionIndexRaw)
+    : null;
+
+  const question = assignedQuestionIndex !== null && assignedQuestionIndex >= 0 && assignedQuestionIndex < QUESTIONS.length
+    ? QUESTIONS[assignedQuestionIndex]
+    : null;
 
   return {
-    handleClaimWrite,
-    txStatus,
-    txErrorMessage,
-    isLoadingTx,
-    isConfirming,
-    isSuccess,
+    hasUserClaimed,
+    isLoadingHasClaimed,
+    assignedQuestionIndex,
+    question,
+    isLoadingAssignedQuestion,
+    isErrorAssignedQuestion,
+    assignedQuestionError,
+    totalClaims,
+    refetchTotalClaims,
+    // Add the refetch for hasUserClaimed so we can trigger it after a successful claim.
+    refetchHasClaimed,
   };
 };

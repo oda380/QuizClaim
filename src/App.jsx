@@ -1,3 +1,4 @@
+// App.jsx
 import React, { Suspense, lazy } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -24,6 +25,7 @@ export default function App({ contractAddress }) {
     assignedQuestionError,
     totalClaims,
     refetchTotalClaims,
+    refetchHasClaimed, // New function from the hook
   } = useQuizContractReads(contractAddress);
 
   const isInitialLoading = isConnecting || isLoadingHasClaimed || isLoadingAssignedQuestion;
@@ -61,14 +63,12 @@ export default function App({ contractAddress }) {
 
         <div className="mt-8">
           {!isConnected ? (
-            // Granular Suspense for the ConnectWalletSection
             <Suspense fallback={<ConnectWalletSectionPlaceholder />}>
               <LazyConnectWalletSection />
             </Suspense>
           ) : (
             <section className="space-y-6">
               {hasUserClaimed ? (
-                // Granular Suspense for the ClaimSuccessDisplay
                 <Suspense fallback={<ClaimSuccessDisplayPlaceholder />}>
                   <LazyClaimSuccessDisplay
                     totalClaims={totalClaims}
@@ -84,7 +84,6 @@ export default function App({ contractAddress }) {
                       className="w-full h-auto rounded-lg shadow-md object-cover"
                     />
                   </div>
-                  {/* Granular Suspense for the QuizGame */}
                   <Suspense fallback={<QuizGamePlaceholder />}>
                     <LazyQuizGame
                       contractAddress={contractAddress}
@@ -96,6 +95,7 @@ export default function App({ contractAddress }) {
                       isLoadingHasClaimed={isLoadingHasClaimed}
                       totalClaims={totalClaims}
                       refetchTotalClaims={refetchTotalClaims}
+                      refetchHasClaimed={refetchHasClaimed} // Pass the new refetch function
                     />
                   </Suspense>
                 </>
